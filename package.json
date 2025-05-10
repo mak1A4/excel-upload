@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "node esbuild.config.js",
     "build": "NODE_ENV=production node esbuild.config.js",
+    "serve": "pnpm dlx http-server . -p 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
