@@ -1,0 +1,37 @@
+{
+  "name": "excel-upload",
+  "version": "1.0.0",
+  "description": "SolidJS Excel Upload Web Component",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "node esbuild.config.js",
+    "build": "NODE_ENV=production node esbuild.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "solid-js",
+    "web-component",
+    "excel",
+    "upload"
+  ],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0",
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.6",
+    "@types/node": "^22.15.17",
+    "esbuild": "^0.25.4",
+    "esbuild-plugin-solid": "^0.6.0",
+    "postcss": "^8.5.3",
+    "solid-element": "^1.9.1",
+    "solid-js": "^1.9.6",
+    "tailwindcss": "^4.1.6",
+    "typescript": "^5.8.3"
+  }
+}
