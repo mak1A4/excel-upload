@@ -22,7 +22,32 @@ type ExcelUploadProps = {
   verificationRules?: VerificationRule[];
 };
 
+// Helper functions for colors
+const getColorHelpers = (props: ExcelUploadProps) => ({
+  primaryColor: () => props.primaryColor || 'text-green-600',
+  primaryBgColor: () => props.primaryColor?.replace('text-', 'bg-') || 'bg-green-600',
+  hoverBgColor: () => props.hoverColor?.replace('text-', 'bg-') || 'bg-green-700',
+  successColor: () => props.successColor || 'text-green-700',
+  successBgColor: () => props.successColor?.replace('text-', 'bg-').replace('700', '50') || 'bg-green-50',
+  successIconColor: () => props.successColor?.replace('700', '600') || 'text-green-600',
+  dragBorderColor: () => props.dragActiveColor?.replace('text-', 'border-') || 'border-green-500',
+  dragBgColor: () => props.dragActiveColor?.replace('text-', 'bg-').replace('500', '50') || 'bg-green-50',
+  errorColor: () => 'text-red-700',
+  errorBgColor: () => 'bg-red-50',
+});
+
+// Helper functions for text labels
+const getTextHelpers = (props: ExcelUploadProps) => ({
+  title: () => props.title || 'Excel File Upload',
+  dragDropText: () => props.dragDropText || 'Drag and drop your Excel file here',
+  orText: () => props.orText || 'or',
+  selectButtonText: () => props.selectButtonText || 'Select File',
+  fileSelectedText: () => props.fileSelectedText || 'File selected:',
+  uploadButtonText: () => props.uploadButtonText || 'Verify & Upload',
+});
+
 export default function ExcelUploadComponent(props: ExcelUploadProps = {}) {
+  console.log(props);
   const [fileName, setFileName] = createSignal<string>('');
   const [isDragging, setIsDragging] = createSignal<boolean>(false);
   const [selectedFile, setSelectedFile] = createSignal<File | null>(null);
@@ -33,25 +58,7 @@ export default function ExcelUploadComponent(props: ExcelUploadProps = {}) {
   let containerRef: HTMLDivElement | undefined;
   let fileInputRef: HTMLInputElement | undefined;
   
-  // Default colors if not provided
-  const primaryColor = () => props.primaryColor || 'text-green-600';
-  const primaryBgColor = () => props.primaryColor?.replace('text-', 'bg-') || 'bg-green-600';
-  const hoverBgColor = () => props.hoverColor?.replace('text-', 'bg-') || 'bg-green-700';
-  const successColor = () => props.successColor || 'text-green-700';
-  const successBgColor = () => props.successColor?.replace('text-', 'bg-').replace('700', '50') || 'bg-green-50';
-  const successIconColor = () => props.successColor?.replace('700', '600') || 'text-green-600';
-  const dragBorderColor = () => props.dragActiveColor?.replace('text-', 'border-') || 'border-green-500';
-  const dragBgColor = () => props.dragActiveColor?.replace('text-', 'bg-').replace('500', '50') || 'bg-green-50';
-  const errorColor = () => 'text-red-700';
-  const errorBgColor = () => 'bg-red-50';
-  
-  // Default labels if not provided
-  const title = () => props.title || 'Excel File Upload';
-  const dragDropText = () => props.dragDropText || 'Drag and drop your Excel file here';
-  const orText = () => props.orText || 'or';
-  const selectButtonText = () => props.selectButtonText || 'Select File';
-  const fileSelectedText = () => props.fileSelectedText || 'File selected:';
-  const uploadButtonText = () => props.uploadButtonText || 'Verify & Upload';
+  const colors = getColorHelpers(props);
 
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -170,94 +177,102 @@ export default function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       }
     }
   });
+
+  const renderHeader = () => (
+    <div class="flex items-center justify-center mb-4">
+      <FileSpreadsheet class={`h-6 w-6 ${colors.primaryColor()} mr-2`} />
+      <h2 class={`text-xl font-bold ${colors.primaryColor()}`}>{getTextHelpers(props).title()}</h2>
+    </div>
+  );
+
+  const renderDragArea = () => (
+    <div 
+      class={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center ${
+        isDragging() ? `${colors.dragBorderColor()} ${colors.dragBgColor()}` : 'border-gray-300'
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <Upload class={`h-12 w-12 ${colors.primaryColor()} mb-2`} />
+      <p class="text-sm font-medium text-gray-700 mb-1">
+        {getTextHelpers(props).dragDropText()}
+      </p>
+      <p class="text-xs text-gray-500 mb-3">{getTextHelpers(props).orText()}</p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleFileChange}
+        class="hidden"
+        id="file-upload"
+      />
+      <label 
+        for="file-upload"
+        class={`py-2 px-4 text-sm font-medium text-white ${colors.primaryBgColor()} rounded-md hover:${colors.hoverBgColor()} cursor-pointer`}
+      >
+        {getTextHelpers(props).selectButtonText()}
+      </label>
+    </div>
+  );
+
+  const renderFileStatus = () => fileName() && (
+    <div class="space-y-3">
+      <div class={`p-3 ${colors.successBgColor()} ${colors.successColor()} rounded-md text-sm flex items-center`}>
+        <Check class={`h-5 w-5 mr-2 ${colors.successIconColor()}`} />
+        <span class="font-medium">{getTextHelpers(props).fileSelectedText()}</span> {fileName()}
+      </div>
+      
+      {/* Verification Errors Section */}
+      {verificationErrors().length > 0 && (
+        <div class={`p-3 ${colors.errorBgColor} ${colors.errorColor()} rounded-md text-sm`}>
+          <div class="flex items-center mb-2">
+            <AlertTriangle class="h-5 w-5 mr-2" />
+            <span class="font-medium">Verification Issues:</span>
+          </div>
+          <ul class="list-disc pl-5 space-y-1">
+            <For each={verificationErrors()}>
+              {(error) => (
+                <li>{error}</li>
+              )}
+            </For>
+          </ul>
+        </div>
+      )}
+      
+      {/* Verification Success Message */}
+      {isVerified() && (
+        <div class={`p-3 ${colors.successBgColor()} ${colors.successColor()} rounded-md text-sm flex items-center`}>
+          <Check class={`h-5 w-5 mr-2 ${colors.successIconColor()}`} />
+          <span class="font-medium">File verified successfully</span>
+        </div>
+      )}
+      
+      <button
+        onClick={handleUpload}
+        disabled={isVerifying()}
+        class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
+          ${isVerifying() ? 'bg-gray-400' : colors.primaryBgColor()} 
+          rounded-md 
+          ${isVerifying() ? '' : `hover:${colors.hoverBgColor()}`} 
+          transition-colors duration-200`}
+      >
+        <FileCheck class="h-5 w-5 mr-2" />
+        {isVerifying() ? 'Verifying...' : getTextHelpers(props).uploadButtonText()}
+      </button>
+    </div>
+  );
   
   return (
-    <div ref={containerRef} class="excel-upload-component">
-      <div class="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md">
-        <div class="flex items-center justify-center mb-4">
-          <FileSpreadsheet class={`h-6 w-6 ${primaryColor()} mr-2`} />
-          <h2 class={`text-xl font-bold ${primaryColor()}`}>{title()}</h2>
-        </div>
-        
+    <div ref={containerRef} class="excel-upload-component flex justify-center items-center">
+      <div class="p-8 max-w-lg w-full bg-white rounded-2xl drop-shadow-2xl border border-green-200">
         <div class="space-y-4">
-          <div 
-            class={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center ${
-              isDragging() ? `${dragBorderColor()} ${dragBgColor()}` : 'border-gray-300'
-            }`}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <Upload class={`h-12 w-12 ${primaryColor()} mb-2`} />
-            <p class="text-sm font-medium text-gray-700 mb-1">
-              {dragDropText()}
-            </p>
-            <p class="text-xs text-gray-500 mb-3">{orText()}</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileChange}
-              class="hidden"
-              id="file-upload"
-            />
-            <label 
-              for="file-upload"
-              class={`py-2 px-4 text-sm font-medium text-white ${primaryBgColor()} rounded-md hover:${hoverBgColor()} cursor-pointer`}
-            >
-              {selectButtonText()}
-            </label>
-          </div>
-          
-          {fileName() && (
-            <div class="space-y-3">
-              <div class={`p-3 ${successBgColor()} ${successColor()} rounded-md text-sm flex items-center`}>
-                <Check class={`h-5 w-5 mr-2 ${successIconColor()}`} />
-                <span class="font-medium">{fileSelectedText()}</span> {fileName()}
-              </div>
-              
-              {/* Verification Errors Section */}
-              {verificationErrors().length > 0 && (
-                <div class={`p-3 ${errorBgColor} ${errorColor()} rounded-md text-sm`}>
-                  <div class="flex items-center mb-2">
-                    <AlertTriangle class="h-5 w-5 mr-2" />
-                    <span class="font-medium">Verification Issues:</span>
-                  </div>
-                  <ul class="list-disc pl-5 space-y-1">
-                    <For each={verificationErrors()}>
-                      {(error) => (
-                        <li>{error}</li>
-                      )}
-                    </For>
-                  </ul>
-                </div>
-              )}
-              
-              {/* Verification Success Message */}
-              {isVerified() && (
-                <div class={`p-3 ${successBgColor()} ${successColor()} rounded-md text-sm flex items-center`}>
-                  <Check class={`h-5 w-5 mr-2 ${successIconColor()}`} />
-                  <span class="font-medium">File verified successfully</span>
-                </div>
-              )}
-              
-              <button
-                onClick={handleUpload}
-                disabled={isVerifying()}
-                class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
-                  ${isVerifying() ? 'bg-gray-400' : primaryBgColor()} 
-                  rounded-md 
-                  ${isVerifying() ? '' : `hover:${hoverBgColor()}`} 
-                  transition-colors duration-200`}
-              >
-                <FileCheck class="h-5 w-5 mr-2" />
-                {isVerifying() ? 'Verifying...' : uploadButtonText()}
-              </button>
-            </div>
-          )}
+          {renderHeader()}
+          {renderDragArea()}
+          {renderFileStatus()}
         </div>
       </div>
     </div>
   );
-} 
+}
