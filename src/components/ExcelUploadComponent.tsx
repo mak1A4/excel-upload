@@ -17,6 +17,7 @@ type ExcelUploadProps = {
   orText?: string;
   selectButtonText?: string;
   fileSelectedText?: string;
+  verifyButtonText?: string;
   uploadButtonText?: string;
   // Verification
   verificationRules?: VerificationRule[];
@@ -43,7 +44,8 @@ const getTextHelpers = (props: ExcelUploadProps) => ({
   orText: () => props.orText || 'or',
   selectButtonText: () => props.selectButtonText || 'Select File',
   fileSelectedText: () => props.fileSelectedText || 'File selected:',
-  uploadButtonText: () => props.uploadButtonText || 'Verify & Upload',
+  verifyButtonText: () => props.verifyButtonText || 'Verify File',
+  uploadButtonText: () => props.uploadButtonText || 'Upload File',
 });
 
 export default function ExcelUploadComponent(props: ExcelUploadProps = {}) {
@@ -144,18 +146,8 @@ export default function ExcelUploadComponent(props: ExcelUploadProps = {}) {
   };
   
   const handleUpload = () => {
-    // First verify if not already verified
-    if (!isVerified()) {
-      verifyFile();
-      
-      // If verification failed, don't proceed with upload
-      if (verificationErrors().length > 0) {
-        return;
-      }
-    }
-    
     const file = selectedFile();
-    if (file && props.onUpload) {
+    if (file && props.onUpload && isVerified()) {
       props.onUpload(file);
     }
   };
@@ -244,23 +236,43 @@ export default function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       {/* Verification Success Message */}
       {isVerified() && (
         <div class={`p-3 ${colors.successBgColor()} ${colors.successColor()} rounded-md text-sm flex items-center`}>
-          <Check class={`h-5 w-5 mr-2 ${colors.successIconColor()}`} />
+          <FileCheck class={`h-5 w-5 mr-2 ${colors.successIconColor()}`} />
           <span class="font-medium">File verified successfully</span>
         </div>
       )}
       
-      <button
-        onClick={handleUpload}
-        disabled={isVerifying()}
-        class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
-          ${isVerifying() ? 'bg-gray-400' : colors.primaryBgColor()} 
-          rounded-md 
-          ${isVerifying() ? '' : `hover:${colors.hoverBgColor()}`} 
-          transition-colors duration-200`}
-      >
-        <FileCheck class="h-5 w-5 mr-2" />
-        {isVerifying() ? 'Verifying...' : getTextHelpers(props).uploadButtonText()}
-      </button>
+      {/* Verify Button - shown when file is selected but not verified */}
+      {!isVerified() && (
+        <button
+          onClick={verifyFile}
+          disabled={isVerifying()}
+          class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
+            ${isVerifying() ? 'bg-gray-400' : colors.primaryBgColor()} 
+            rounded-md 
+            ${isVerifying() ? '' : `hover:${colors.hoverBgColor()}`} 
+            transition-colors duration-200
+            cursor-pointer`}
+        >
+          <Check class="h-5 w-5 mr-2" />
+          {isVerifying() ? 'Verifying...' : getTextHelpers(props).verifyButtonText()}
+        </button>
+      )}
+      
+      {/* Upload Button - shown only after successful verification */}
+      {isVerified() && (
+        <button
+          onClick={handleUpload}
+          class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
+            ${colors.primaryBgColor()} 
+            rounded-md 
+            hover:${colors.hoverBgColor()} 
+            transition-colors duration-200
+            cursor-pointer`}
+        >
+          <Upload class="h-5 w-5 mr-2" />
+          {getTextHelpers(props).uploadButtonText()}
+        </button>
+      )}
     </div>
   );
   
