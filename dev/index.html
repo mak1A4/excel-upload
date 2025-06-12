@@ -30,8 +30,62 @@
   </style>
 </head>
 <body>
-  <div class="container">    
-    <excel-upload title="Central Incident Reporting Upload"></excel-upload>
+  <div class="container" id="app">    
   </div>
+<script type="module">
+      // Define verification rules
+      const verificationRules = [
+        // Rule 1 ─ at least 3 data rows
+        ({ workbook, xlsx }) => {
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows  = xlsx.utils.sheet_to_json(sheet, { header: 1 }).length - 1;
+          return rows >= 3
+            ? { ok: true, details: [`Row count: ${rows}`] }
+            : { ok: false, message: `Need at least 3 rows (found ${rows})` };
+        },
+
+        // Rule 2 ─ required header columns
+        ({ workbook, xlsx }) => {
+          const required = ['Short description', 'Number'];
+          const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+          const headers  = xlsx.utils.sheet_to_json(sheet, { header: 1 })[0] ?? [];
+          const missing  = required.filter(col => !headers.includes(col));
+          return missing.length === 0
+            ? { ok: true, details: ['All required columns present'] }
+            : { ok: false, message: `Missing columns: ${missing.join(', ')}` };
+        }
+      ];
+
+      // Create the element programmatically with all props
+      const uploader = document.createElement('excel-upload');
+      uploader.title = 'Central Incident Reporting Upload';
+      
+      uploader.verificationRules = verificationRules;
+      
+      // Implement onUpload handler
+      uploader.onUpload = async (file) => {
+        console.log('🚀 File upload initiated!');
+        console.log('File details:', {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: new Date(file.lastModified)
+        });
+        
+        // Simulate API call with delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Simulate random success/failure for demo
+        if (Math.random() > 0.3) {
+          console.log('✅ Upload successful!');
+          // Success - component will show success status
+        } else {
+          throw new Error('Network error: Unable to reach server');
+        }
+      };
+      
+      // Append to container
+      document.getElementById('app').appendChild(uploader);
+    </script>
 </body>
-</html> 
+</html>
