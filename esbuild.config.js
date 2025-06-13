@@ -13,9 +13,17 @@ const cssPlugin = {
       const css = await fs.readFile(args.path, 'utf8');
       const result = await postcss([tailwindcssPostcss()]).process(css, { from: args.path });
       
-      // Export the CSS as a string
+      // Export CSS as base64 to avoid string literal issues in ServiceNow
+      const base64Css = Buffer.from(result.css, 'utf8').toString('base64');
+      
       return {
-        contents: `export default ${JSON.stringify(result.css)};`,
+        contents: `
+          const base64Css = "${base64Css}";
+          const css = typeof atob !== 'undefined' 
+            ? atob(base64Css) 
+            : Buffer.from(base64Css, 'base64').toString('utf8');
+          export default css;
+        `,
         loader: 'js',
       };
     });
@@ -27,9 +35,9 @@ const buildOptions = {
   entryPoints: ['src/index.ts'],
   bundle: true,
   outdir: 'dist',
-  format: 'esm',
+  format: 'iife',
   sourcemap: true,
-  target: ['es2020'],
+  target: ['es2015'],
   plugins: [
     solidPlugin(),
     cssPlugin

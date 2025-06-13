@@ -1,1 +1,6 @@
-@import "tailwindcss"; 
+@import "tailwindcss";
+
+/* Force consistent rem calculation in shadow DOM */
+:host {
+  font-size: 16px !important;
+} 
