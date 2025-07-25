@@ -92,16 +92,40 @@
       // Create the element programmatically with all props
       const uploader = document.createElement('excel-upload');
       uploader.title = 'Central Incident Reporting Upload';
-      uploader.dropdownLabel = 'Select Category';
-      uploader.dropdownPlaceholder = 'Choose a category...';
+      uploader.dropdownLabel = 'Select Business Unit';
+      uploader.dropdownPlaceholder = 'Choose a country...';
       uploader.dropdownRequired = true;
       
-      // Set dropdown options
+      // Set dropdown options - European countries
       uploader.dropdownOptions = [
-        { label: "Sales Data", value: "sales" },
-        { label: "Inventory", value: "inventory" },
-        { label: "Customer List", value: "customers" },
-        { label: "Financial Report", value: "finance" }
+        { label: "Austria", value: "AT" },
+        { label: "Belgium", value: "BE" },
+        { label: "Bulgaria", value: "BG" },
+        { label: "Croatia", value: "HR" },
+        { label: "Czech Republic", value: "CZ" },
+        { label: "Denmark", value: "DK" },
+        { label: "Estonia", value: "EE" },
+        { label: "Finland", value: "FI" },
+        { label: "France", value: "FR" },
+        { label: "Germany", value: "DE" },
+        { label: "Greece", value: "GR" },
+        { label: "Hungary", value: "HU" },
+        { label: "Ireland", value: "IE" },
+        { label: "Italy", value: "IT" },
+        { label: "Latvia", value: "LV" },
+        { label: "Lithuania", value: "LT" },
+        { label: "Luxembourg", value: "LU" },
+        { label: "Netherlands", value: "NL" },
+        { label: "Norway", value: "NO" },
+        { label: "Poland", value: "PL" },
+        { label: "Portugal", value: "PT" },
+        { label: "Romania", value: "RO" },
+        { label: "Slovakia", value: "SK" },
+        { label: "Slovenia", value: "SI" },
+        { label: "Spain", value: "ES" },
+        { label: "Sweden", value: "SE" },
+        { label: "Switzerland", value: "CH" },
+        { label: "United Kingdom", value: "GB" }
       ];
       
       uploader.verificationRules = verificationRules;
@@ -115,13 +139,17 @@
           type: file.type,
           lastModified: new Date(file.lastModified)
         });
-        console.log('Selected category:', dropdownValue);
+        console.log('Selected business unit:', dropdownValue);
+        
+        // Find the country name from the code
+        const selectedCountry = uploader.dropdownOptions.find(opt => opt.value === dropdownValue);
+        const countryName = selectedCountry ? selectedCountry.label : dropdownValue;
         
         // Show result
         const resultDiv = document.getElementById('result');
         const resultText = document.getElementById('result-text');
         resultDiv.style.display = 'block';
-        resultText.textContent = `Uploading "${file.name}" to category: ${dropdownValue}...`;
+        resultText.textContent = `Uploading "${file.name}" for ${countryName} (${dropdownValue})...`;
         
         // Simulate API call with delay
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -129,7 +157,8 @@
         // Simulate random success/failure for demo
         if (Math.random() > 0.3) {
           console.log('✅ Upload successful!');
-          resultText.textContent = `✅ Successfully uploaded "${file.name}" to category: ${dropdownValue}`;
+          resultText.textContent = `✅ Successfully uploaded "${file.name}" for ${countryName} (${dropdownValue})`;
+          resultDiv.style.background = '#e8f5e9';
           // Success - component will show success status
         } else {
           resultDiv.style.background = '#ffebee';

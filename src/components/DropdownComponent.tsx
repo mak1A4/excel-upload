@@ -85,8 +85,16 @@ export function DropdownComponent(props: DropdownProps) {
   
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
-    setSearchQuery(target.value);
+    const newValue = target.value;
+    setSearchQuery(newValue);
     setHighlightedIndex(0); // Reset highlight when search changes
+    
+    // If input is cleared, also clear the selection
+    if (newValue === '' && selectedOption()) {
+      setSelectedOption(null);
+      props.onChange?.(undefined as any); // Clear the parent's value
+    }
+    
     if (!isOpen()) {
       setIsOpen(true);
     }

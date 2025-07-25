@@ -398,19 +398,29 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       
       {/* Upload Button - shown only after successful verification */}
       {isVerified() && (
-        <button
-          onClick={handleUpload}
-          disabled={isUploading()}
-          class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
-            ${isUploading() ? 'bg-gray-400' : colors.primaryBgColor()} 
-            rounded-md 
-            ${isUploading() ? '' : `hover:${colors.hoverBgColor()}`} 
-            transition-colors duration-200
-            cursor-pointer`}
-        >
-          <Upload class="h-5 w-5 mr-2" />
-          {isUploading() ? 'Uploading...' : getTextHelpers(props).uploadButtonText()}
-        </button>
+        <>
+          {/* Show message if dropdown is required but not selected */}
+          {props.dropdownRequired && props.dropdownOptions && props.dropdownOptions.length > 0 && !selectedDropdownValue() && (
+            <div class="p-2 bg-amber-50 text-amber-700 rounded-md text-sm flex items-center">
+              <AlertTriangle class="h-4 w-4 mr-2 flex-shrink-0" />
+              <span>Please select {props.dropdownLabel?.toLowerCase() || 'an option'} before uploading</span>
+            </div>
+          )}
+          
+          <button
+            onClick={handleUpload}
+            disabled={isUploading() || (props.dropdownRequired && props.dropdownOptions && props.dropdownOptions.length > 0 && !selectedDropdownValue())}
+            class={`w-full py-2 px-4 flex items-center justify-center text-sm font-medium text-white 
+              ${isUploading() || (props.dropdownRequired && props.dropdownOptions && props.dropdownOptions.length > 0 && !selectedDropdownValue()) 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : `${colors.primaryBgColor()} hover:${colors.hoverBgColor()} cursor-pointer`} 
+              rounded-md 
+              transition-colors duration-200`}
+          >
+            <Upload class="h-5 w-5 mr-2" />
+            {isUploading() ? 'Uploading...' : getTextHelpers(props).uploadButtonText()}
+          </button>
+        </>
       )}
       
       {/* Upload Status - shown when there's a status message */}
