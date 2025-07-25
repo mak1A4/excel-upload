@@ -26,11 +26,20 @@ export type ExcelUploadProps = {
   uploadAnotherButtonText?: string;
   // Verification
   verificationRules?: VerificationRule[];
+  verificationFailedText?: string;
+  verificationSuccessText?: string;
+  verificationIssuesText?: string;
+  rowsText?: string;
   // Dropdown
   dropdownOptions?: DropdownOption[];
   dropdownPlaceholder?: string;
   dropdownLabel?: string;
   dropdownRequired?: boolean;
+  dropdownRequiredMessage?: string;
+  dropdownRequiredWarning?: string;
+  noResultsText?: string;
+  // Status messages
+  uploadingStatusText?: string;
 };
 
 /**
@@ -78,6 +87,13 @@ const getTextHelpers = (props: ExcelUploadProps) => ({
   successTitle: () => props.successTitle || 'Upload Successful!',
   successMessage: () => props.successMessage || 'has been uploaded successfully.',
   uploadAnotherButtonText: () => props.uploadAnotherButtonText || 'Upload Another File',
+  verificationFailedText: () => props.verificationFailedText || 'Failed to verify file',
+  verificationSuccessText: () => props.verificationSuccessText || 'File verified successfully',
+  verificationIssuesText: () => props.verificationIssuesText || 'Verification Issues:',
+  rowsText: () => props.rowsText || 'rows',
+  dropdownRequiredMessage: () => props.dropdownRequiredMessage || 'Please select an option from the dropdown',
+  dropdownRequiredWarning: () => props.dropdownRequiredWarning || 'Please select {label} before uploading',
+  uploadingStatusText: () => props.uploadingStatusText || 'Uploading...',
 });
 
 export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
@@ -220,7 +236,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       }
     } catch (error) {
       console.error('Error verifying file:', error);
-      setVerificationErrors(['Failed to verify file']);
+      setVerificationErrors([text.verificationFailedText()]);
       setIsVerified(false);
     } finally {
       setIsVerifying(false);
@@ -253,7 +269,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
     
     // Check if dropdown is required and has value
     if (props.dropdownRequired && props.dropdownOptions && props.dropdownOptions.length > 0 && !selectedDropdownValue()) {
-      setUploadStatus('Please select an option from the dropdown');
+      setUploadStatus(text.dropdownRequiredMessage());
       return;
     }
     
@@ -350,7 +366,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
         <div class={`p-3 ${colors.errorBgColor} ${colors.errorColor()} rounded-md text-sm`}>
           <div class="flex items-center mb-2">
             <AlertTriangle class="h-5 w-5 mr-2" />
-            <span class="font-medium">Verification Issues:</span>
+            <span class="font-medium">{text.verificationIssuesText()}</span>
           </div>
           <ul class="list-disc pl-5 space-y-1">
             <For each={verificationErrors()}>
@@ -367,7 +383,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
         <div class={`p-3 ${colors.successBgColor()} ${colors.successColor()} rounded-md text-sm`}>
           <div class="flex items-center mb-2">
             <FileCheck class={`h-5 w-5 mr-2 ${colors.successIconColor()}`} />
-            <span class="font-medium">File verified successfully – {rowCount()} rows</span>
+            <span class="font-medium">{text.verificationSuccessText()} – {rowCount()} {text.rowsText()}</span>
           </div>
           {verificationInfo().length > 0 && (
             <ul class="list-disc pl-7 space-y-1">
@@ -403,7 +419,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
           {props.dropdownRequired && props.dropdownOptions && props.dropdownOptions.length > 0 && !selectedDropdownValue() && (
             <div class="p-2 bg-amber-50 text-amber-700 rounded-md text-sm flex items-center">
               <AlertTriangle class="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>Please select {props.dropdownLabel?.toLowerCase() || 'an option'} before uploading</span>
+              <span>{text.dropdownRequiredWarning().replace('{label}', props.dropdownLabel?.toLowerCase() || 'an option')}</span>
             </div>
           )}
           
@@ -418,7 +434,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
               transition-colors duration-200`}
           >
             <Upload class="h-5 w-5 mr-2" />
-            {isUploading() ? 'Uploading...' : getTextHelpers(props).uploadButtonText()}
+            {isUploading() ? text.uploadingStatusText() : text.uploadButtonText()}
           </button>
         </>
       )}
@@ -497,6 +513,8 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
                 onChange={setSelectedDropdownValue}
                 primaryColor={colors.primaryColor()}
                 hoverColor={colors.hoverBgColor()}
+                searchPlaceholder={props.dropdownPlaceholder}
+                noResultsText={props.noResultsText}
               />
             )}
             

@@ -23,11 +23,21 @@ const webComponentProps = {
   successTitle: '',
   successMessage: '',
   uploadAnotherButtonText: '',
+  // Verification texts
+  verificationFailedText: '',
+  verificationSuccessText: '',
+  verificationIssuesText: '',
+  rowsText: '',
   // Dropdown props
   dropdownOptions: [],
   dropdownPlaceholder: '',
   dropdownLabel: '',
   dropdownRequired: false,
+  dropdownRequiredMessage: '',
+  dropdownRequiredWarning: '',
+  noResultsText: '',
+  // Status messages
+  uploadingStatusText: '',
 } as const;
 
 // Helper function to map props (excluding styles which is internal)

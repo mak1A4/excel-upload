@@ -14,6 +14,8 @@ export interface DropdownProps {
   label?: string;
   primaryColor?: string;
   hoverColor?: string;
+  searchPlaceholder?: string;
+  noResultsText?: string;
 }
 
 export function DropdownComponent(props: DropdownProps) {
@@ -48,6 +50,9 @@ export function DropdownComponent(props: DropdownProps) {
       if (option) {
         setSelectedOption(option);
       }
+    } else {
+      // Clear selection when value is undefined
+      setSelectedOption(null);
     }
   });
   
@@ -192,7 +197,7 @@ export function DropdownComponent(props: DropdownProps) {
             onFocus={handleInputFocus}
             onKeyDown={handleKeyDown}
             disabled={props.disabled}
-            placeholder={props.placeholder || 'Search or select an option'}
+            placeholder={props.searchPlaceholder || props.placeholder || 'Search or select an option'}
             class={`w-full pl-10 pr-12 py-3 bg-white border-2 border-solid rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-text ${
               props.disabled 
                 ? 'bg-gray-100 cursor-not-allowed border-gray-300 text-gray-500 shadow-sm' 
@@ -237,7 +242,7 @@ export function DropdownComponent(props: DropdownProps) {
                 when={filteredOptions().length > 0}
                 fallback={
                   <li class="px-4 py-6 text-center text-gray-500">
-                    No results found for "{searchQuery()}"
+                    {props.noResultsText || 'No results found for'} "{searchQuery()}"
                   </li>
                 }
               >
