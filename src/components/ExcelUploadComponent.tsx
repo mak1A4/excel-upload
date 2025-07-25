@@ -478,11 +478,11 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
   
   return (
     <div ref={containerRef} class="excel-upload-component flex justify-center items-center">
-      <div class="p-8 max-w-lg w-full bg-white rounded-2xl drop-shadow-2xl border border-[#005DA9]/20">
+      <div class="p-8 max-w-lg w-full bg-white rounded-2xl drop-shadow-2xl border border-[#005DA9]/20 overflow-visible">
         {showSuccessDialog() ? (
           renderSuccessDialog()
         ) : (
-          <div class="space-y-4">
+          <div class="space-y-4 overflow-visible">
             {renderHeader()}
             {renderDragArea()}
             

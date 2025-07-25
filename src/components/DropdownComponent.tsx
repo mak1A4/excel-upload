@@ -179,8 +179,8 @@ export function DropdownComponent(props: DropdownProps) {
         </label>
       </Show>
       
-      <div ref={dropdownRef} class="relative">
-        <div class="relative">
+      <div ref={dropdownRef} class="relative overflow-visible">
+        <div class="relative overflow-visible">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search class="h-4 w-4 text-gray-400" />
           </div>
@@ -227,7 +227,7 @@ export function DropdownComponent(props: DropdownProps) {
         </div>
         
         <Show when={isOpen() && !props.disabled}>
-          <div class="absolute z-10 w-full mt-2 bg-white border-2 border-[#005DA9]/20 rounded-lg drop-shadow-xl backdrop-blur-sm">
+          <div class="absolute z-50 w-full mt-2 bg-white border-2 border-[#005DA9]/20 rounded-lg drop-shadow-xl backdrop-blur-sm">
             <ul 
               class="max-h-60 overflow-auto py-2 rounded-lg"
               role="listbox"
