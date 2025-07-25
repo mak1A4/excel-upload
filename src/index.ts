@@ -1,5 +1,6 @@
 import { customElement } from 'solid-element';
 import { ExcelUploadComponent, VerificationRule, ExcelUploadProps} from './components/ExcelUploadComponent';
+import { DropdownOption } from './types';
 import styles from './styles.css';
 
 // Central definition of web component properties
@@ -22,6 +23,11 @@ const webComponentProps = {
   successTitle: '',
   successMessage: '',
   uploadAnotherButtonText: '',
+  // Dropdown props
+  dropdownOptions: [],
+  dropdownPlaceholder: '',
+  dropdownLabel: '',
+  dropdownRequired: false,
 } as const;
 
 // Helper function to map props (excluding styles which is internal)
@@ -48,4 +54,4 @@ customElement(
 );
 
 // Export the component for direct usage
-export { ExcelUploadComponent, VerificationRule }; 
+export { ExcelUploadComponent, VerificationRule, DropdownOption }; 

@@ -2,6 +2,8 @@ import * as XLSX from 'xlsx';
 import { createSignal, createEffect, onMount, For } from 'solid-js';
 import { FileSpreadsheet, Upload, Check, FileCheck, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-solid';
 import { parseExcel } from '../utils/parseExcel';
+import { DropdownComponent } from './DropdownComponent';
+import type { DropdownOption } from '../types';
 
 export type ExcelUploadProps = {
   styles?: string;
@@ -9,7 +11,7 @@ export type ExcelUploadProps = {
   hoverColor?: string;
   successColor?: string;
   dragActiveColor?: string;
-  onUpload?: (file: File) => void;
+  onUpload?: (file: File, dropdownValue?: string | number) => void;
   // Custom labels
   title?: string;
   dragDropText?: string;
@@ -24,6 +26,11 @@ export type ExcelUploadProps = {
   uploadAnotherButtonText?: string;
   // Verification
   verificationRules?: VerificationRule[];
+  // Dropdown
+  dropdownOptions?: DropdownOption[];
+  dropdownPlaceholder?: string;
+  dropdownLabel?: string;
+  dropdownRequired?: boolean;
 };
 
 /**
@@ -87,6 +94,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
   const [isUploading, setIsUploading] = createSignal<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = createSignal<boolean>(false);
   const [showSuccessDialog, setShowSuccessDialog] = createSignal<boolean>(false);
+  const [selectedDropdownValue, setSelectedDropdownValue] = createSignal<string | number | undefined>(undefined);
   
   let containerRef: HTMLDivElement | undefined;
   let fileInputRef: HTMLInputElement | undefined;
@@ -232,6 +240,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
     setShowSuccessDialog(false);
     setRowCount(0);
     setParsedWorkbook(null);
+    setSelectedDropdownValue(undefined);
     
     // Clear the file input
     if (fileInputRef) {
@@ -241,14 +250,21 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
 
   const handleUpload = async () => {
     const file = selectedFile();
+    
+    // Check if dropdown is required and has value
+    if (props.dropdownRequired && props.dropdownOptions && props.dropdownOptions.length > 0 && !selectedDropdownValue()) {
+      setUploadStatus('Please select an option from the dropdown');
+      return;
+    }
+    
     if (file && props.onUpload && isVerified()) {
       setIsUploading(true);
       setUploadSuccess(false);
       setUploadStatus(`Uploading ${file.name}...`);
       
       try {
-        // Call the onUpload handler
-        await props.onUpload(file);
+        // Call the onUpload handler with dropdown value
+        await props.onUpload(file, selectedDropdownValue());
         
         // Show success dialog immediately
         setUploadSuccess(true);
@@ -459,6 +475,21 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
           <div class="space-y-4">
             {renderHeader()}
             {renderDragArea()}
+            
+            {/* Dropdown Section - Always visible when options are defined */}
+            {props.dropdownOptions && props.dropdownOptions.length > 0 && (
+              <DropdownComponent
+                options={props.dropdownOptions}
+                placeholder={props.dropdownPlaceholder}
+                label={props.dropdownLabel}
+                required={props.dropdownRequired}
+                value={selectedDropdownValue()}
+                onChange={setSelectedDropdownValue}
+                primaryColor={colors.primaryColor()}
+                hoverColor={colors.hoverBgColor()}
+              />
+            )}
+            
             {renderFileStatus()}
           </div>
         )}

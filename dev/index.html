@@ -8,7 +8,7 @@
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #fff;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 20px;
       display: flex;
@@ -25,12 +25,45 @@
     .container {
       max-width: 800px;
       width: 100%;
-      margin: 8rem;
+      margin: 2rem auto;
+    }
+    
+    .demo-section {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e8f5e9;
+      border-radius: 5px;
+      display: none;
+    }
+    
+    .code-block {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+      margin-top: 20px;
+      overflow-x: auto;
     }
   </style>
 </head>
 <body>
-  <div class="container" id="app">    
+  <div class="container">
+    <div class="demo-section">
+      <div id="app"></div>
+      <div id="result" class="result">
+        <h3>Upload Result:</h3>
+        <p id="result-text"></p>
+      </div>
+    </div>
   </div>
 <script>
       // Define verification rules
@@ -59,11 +92,22 @@
       // Create the element programmatically with all props
       const uploader = document.createElement('excel-upload');
       uploader.title = 'Central Incident Reporting Upload';
+      uploader.dropdownLabel = 'Select Category';
+      uploader.dropdownPlaceholder = 'Choose a category...';
+      uploader.dropdownRequired = true;
+      
+      // Set dropdown options
+      uploader.dropdownOptions = [
+        { label: "Sales Data", value: "sales" },
+        { label: "Inventory", value: "inventory" },
+        { label: "Customer List", value: "customers" },
+        { label: "Financial Report", value: "finance" }
+      ];
       
       uploader.verificationRules = verificationRules;
       
       // Implement onUpload handler
-      uploader.onUpload = async (file) => {
+      uploader.onUpload = async (file, dropdownValue) => {
         console.log('🚀 File upload initiated!');
         console.log('File details:', {
           name: file.name,
@@ -71,6 +115,13 @@
           type: file.type,
           lastModified: new Date(file.lastModified)
         });
+        console.log('Selected category:', dropdownValue);
+        
+        // Show result
+        const resultDiv = document.getElementById('result');
+        const resultText = document.getElementById('result-text');
+        resultDiv.style.display = 'block';
+        resultText.textContent = `Uploading "${file.name}" to category: ${dropdownValue}...`;
         
         // Simulate API call with delay
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -78,8 +129,11 @@
         // Simulate random success/failure for demo
         if (Math.random() > 0.3) {
           console.log('✅ Upload successful!');
+          resultText.textContent = `✅ Successfully uploaded "${file.name}" to category: ${dropdownValue}`;
           // Success - component will show success status
         } else {
+          resultDiv.style.background = '#ffebee';
+          resultText.textContent = `❌ Failed to upload "${file.name}": Network error`;
           throw new Error('Network error: Unable to reach server');
         }
       };
