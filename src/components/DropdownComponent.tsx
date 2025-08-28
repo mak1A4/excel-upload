@@ -186,7 +186,7 @@ export function DropdownComponent(props: DropdownProps) {
       
       <div ref={dropdownRef} class="relative overflow-visible">
         <div class="relative overflow-visible">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
             <Search class="h-4 w-4 text-gray-400" />
           </div>
           <input
@@ -198,12 +198,12 @@ export function DropdownComponent(props: DropdownProps) {
             onKeyDown={handleKeyDown}
             disabled={props.disabled}
             placeholder={props.searchPlaceholder || props.placeholder || 'Search or select an option'}
-            class={`w-full pl-10 pr-12 py-3 bg-white border-2 border-solid rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-text ${
+            class={`w-full pl-8 pr-9 py-0.5 text-sm leading-4 bg-white border border-solid rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 cursor-text ${
               props.disabled 
                 ? 'bg-gray-100 cursor-not-allowed border-gray-300 text-gray-500 shadow-sm' 
                 : selectedOption() && !searchQuery()
-                  ? `border-[#005DA9] border-opacity-40 shadow-lg hover:shadow-xl hover:border-opacity-60 focus:border-[#005DA9] focus:ring-[#005DA9] text-gray-900 font-medium`
-                  : `border-gray-400 shadow-md hover:shadow-lg hover:border-[#005DA9] hover:border-opacity-40 focus:border-[#005DA9] focus:ring-[#005DA9] ${searchQuery() ? 'text-gray-900' : 'text-gray-500'}`
+                  ? `border-[#005DA9] border-opacity-40 shadow hover:shadow-md hover:border-opacity-60 focus:border-[#005DA9] focus:ring-[#005DA9] text-gray-900`
+                  : `border-gray-400 shadow-sm hover:shadow-md hover:border-[#005DA9] hover:border-opacity-40 focus:border-[#005DA9] focus:ring-[#005DA9] ${searchQuery() ? 'text-gray-900' : 'text-gray-500'}`
             } transition-all duration-200`}
             aria-haspopup="listbox"
             aria-expanded={isOpen()}
@@ -213,7 +213,7 @@ export function DropdownComponent(props: DropdownProps) {
             <button
               type="button"
               onClick={handleToggleDropdown}
-              class={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
+              class={`w-5 h-5 flex items-center justify-center rounded-full transition-all duration-200 ${
                 props.disabled 
                   ? 'cursor-not-allowed opacity-50' 
                   : 'cursor-pointer hover:bg-[#005DA9]/10 hover:border hover:border-[#005DA9]/30'
@@ -223,7 +223,7 @@ export function DropdownComponent(props: DropdownProps) {
               disabled={props.disabled}
             >
               <ChevronDown 
-                class={`h-4 w-4 text-[#005DA9]/70 transition-all duration-200 ${
+                class={`h-3.5 w-3.5 text-[#005DA9]/70 transition-all duration-200 ${
                   isOpen() ? 'transform rotate-180' : ''
                 } ${!props.disabled ? 'group-hover:text-[#005DA9]' : ''}`}
               />
@@ -232,16 +232,16 @@ export function DropdownComponent(props: DropdownProps) {
         </div>
         
         <Show when={isOpen() && !props.disabled}>
-          <div class="absolute z-50 w-full mt-2 bg-white border-2 border-[#005DA9]/20 rounded-lg drop-shadow-xl backdrop-blur-sm">
+          <div class="absolute z-50 w-full mt-1.5 bg-white border border-[#005DA9]/20 rounded-md shadow-lg backdrop-blur-sm">
             <ul 
-              class="max-h-60 overflow-auto py-2 rounded-lg"
+              class="max-h-60 overflow-auto py-1 rounded-md"
               role="listbox"
               aria-label={props.label || 'Options'}
             >
               <Show
                 when={filteredOptions().length > 0}
                 fallback={
-                  <li class="px-4 py-6 text-center text-gray-500">
+                  <li class="px-3 py-4 text-center text-gray-500 text-sm">
                     {props.noResultsText || 'No results found for'} "{searchQuery()}"
                   </li>
                 }
@@ -256,7 +256,7 @@ export function DropdownComponent(props: DropdownProps) {
                         handleSelect(option);
                       }}
                       onMouseEnter={() => setHighlightedIndex(index())}
-                      class={`px-4 py-2.5 mx-2 my-0.5 rounded-md cursor-pointer transition-all duration-150 ${
+                      class={`px-3 py-1.5 mx-2 my-0.5 rounded-md cursor-pointer transition-all duration-150 text-sm ${
                         selectedOption()?.value === option.value
                           ? `${primaryBgColor()} text-white shadow-sm hover:shadow-md`
                           : `${highlightedIndex() === index() ? 'bg-[#005DA9]/10' : ''} hover:bg-[#005DA9]/10 text-gray-700`

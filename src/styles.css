@@ -1,6 +1,41 @@
 @import "tailwindcss";
 
-/* Force consistent rem calculation in shadow DOM */
+/* Sizing is independent of host html font-size via rem→px conversion */
+
+/* Minimal, scoped reset so utilities render consistently inside shadow DOM */
+:host,
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
+
 :host {
-  font-size: 16px !important;
-} 
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+:host button,
+:host input,
+:host select,
+:host textarea,
+:host ::file-selector-button {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+:host img,
+:host video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Remove default bullets; utilities like `list-disc` will opt-in when needed */
+:host ol,
+:host ul,
+:host menu {
+  list-style: none;
+  padding-left: 0;
+}
