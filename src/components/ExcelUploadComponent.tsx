@@ -35,11 +35,18 @@ export type ExcelUploadProps = {
   dropdownPlaceholder?: string;
   dropdownLabel?: string;
   dropdownRequired?: boolean;
+  dropdownValue?: string | number; // externally controlled selection
   dropdownRequiredMessage?: string;
   dropdownRequiredWarning?: string;
   noResultsText?: string;
   // Status messages
   uploadingStatusText?: string;
+  // Injection options
+  injectDropdownValueIntoColumn?: boolean; // when true, add a column with selected dropdown value
+  injectColumnHeader?: string; // header for the injected column
+  injectColumnIndex?: number; // zero-based index where to insert the new column
+  // Sheet selection
+  targetSheetName?: string; // if provided, only this sheet is used for row counting/verification summary
 };
 
 /**
@@ -126,6 +133,23 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
     setRules(props.verificationRules || []);
   });
 
+  // Keep internal dropdown selection in sync with external prop
+  createEffect(() => {
+    const ext = props.dropdownValue;
+    const options = props.dropdownOptions;
+    if (ext === undefined) {
+      setSelectedDropdownValue(undefined);
+      return;
+    }
+    // If options provided, only set when value exists in options; otherwise clear
+    if (Array.isArray(options) && options.length > 0) {
+      const exists = options.some(o => o.value === ext);
+      setSelectedDropdownValue(exists ? ext : undefined);
+    } else {
+      setSelectedDropdownValue(ext);
+    }
+  });
+
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
@@ -199,16 +223,31 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       const workbook = await parseExcel(file);
       setParsedWorkbook(workbook);
 
-      // Calculate total rows
+      // Calculate total rows (filter out whitespace-only rows and optionally
+      // restrict to a single sheet if targetSheetName is provided)
       let totalRows = 0;
-      for (const sheetName in workbook.Sheets) {
-        if (workbook.Sheets.hasOwnProperty(sheetName)) {
-          const sheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-          if (json.length > 1) { // Skip empty sheets
-            totalRows += json.length - 1; // Subtract 1 for header
-          }
-        }
+      const sheetNamesToCount = props.targetSheetName
+        ? [props.targetSheetName]
+        : workbook.SheetNames;
+
+      for (const sheetName of sheetNamesToCount) {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) continue;
+
+        const aoa: any[][] = XLSX.utils.sheet_to_json(sheet, {
+          header: 1,
+          blankrows: false,
+          defval: null,
+        });
+
+        if (aoa.length === 0) continue; // entirely empty sheet
+
+        const contentRows = aoa.slice(1);
+        const isCellEmpty = (cell: any) =>
+          cell === null || cell === undefined || (typeof cell === 'string' && cell.trim() === '');
+        const isRowEmpty = (row: any[]) => row.every(isCellEmpty);
+        const nonEmptyRows = contentRows.filter((row) => !isRowEmpty(row));
+        totalRows += nonEmptyRows.length;
       }
       setRowCount(totalRows);
 
@@ -279,8 +318,55 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       setUploadStatus(`Uploading ${file.name}...`);
       
       try {
+        let fileToUpload: File = file;
+        // Optionally inject dropdown value as a new column into every sheet
+        if (props.injectDropdownValueIntoColumn && selectedDropdownValue() !== undefined) {
+          try {
+            const workbook = _parsedWorkbook() ?? await parseExcel(file);
+            const headerText = props.injectColumnHeader ?? 'Selected Value';
+            const insertIndex = Math.max(0, props.injectColumnIndex ?? 0);
+            // Iterate sheets and inject
+            const newWorkbook: XLSX.WorkBook = XLSX.utils.book_new();
+            for (const sheetName of workbook.SheetNames) {
+              const sheet = workbook.Sheets[sheetName];
+              const data: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+              if (data.length === 0) {
+                // empty sheet -> just header
+                const newData = [[headerText]] as any[][];
+                const newSheet = XLSX.utils.aoa_to_sheet(newData);
+                XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+                continue;
+              }
+              const headerRow = data[0] as any[];
+              const contentRows = data.slice(1);
+              const adjustedInsert = Math.min(insertIndex, headerRow.length);
+              // Build new header with insertion
+              const newHeader = [
+                ...headerRow.slice(0, adjustedInsert),
+                headerText,
+                ...headerRow.slice(adjustedInsert),
+              ];
+              const newRows = contentRows.map((row) => {
+                const value = selectedDropdownValue() as any;
+                const before = row.slice(0, adjustedInsert);
+                const after = row.slice(adjustedInsert);
+                return [...before, value, ...after];
+              });
+              const newData = [newHeader, ...newRows];
+              const newSheet = XLSX.utils.aoa_to_sheet(newData);
+              XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+            }
+            // Write workbook to a Blob and create a new File
+            const wbout = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            fileToUpload = new File([blob], file.name.replace(/(\.xlsx|\.xls)$/i, '_with_value.xlsx'), { type: blob.type });
+          } catch (e) {
+            console.error('Injection failed, falling back to original file:', e);
+          }
+        }
+
         // Call the onUpload handler with dropdown value
-        await props.onUpload(file, selectedDropdownValue());
+        await props.onUpload(fileToUpload, selectedDropdownValue());
         
         // Show success dialog immediately
         setUploadSuccess(true);
@@ -383,7 +469,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
         <div class={`p-3 ${colors.successBgColor()} ${colors.successColor()} rounded-md text-sm`}>
           <div class="flex items-center mb-2">
             <FileCheck class={`h-5 w-5 mr-2 ${colors.successIconColor()}`} />
-            <span class="font-medium">{text.verificationSuccessText()} – {rowCount()} {text.rowsText()}</span>
+            <span class="font-medium">{text.verificationSuccessText()}</span>
           </div>
           {verificationInfo().length > 0 && (
             <ul class="list-disc pl-7 space-y-1">

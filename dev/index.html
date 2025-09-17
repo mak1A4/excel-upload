@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Excel Upload Web Component Demo</title>
   <script src="../dist/index.js"></script>
+  <!-- DEV-ONLY: Load XLSX to inspect modified files client-side -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -62,6 +64,11 @@
       <div id="result" class="result">
         <h3>Upload Result:</h3>
         <p id="result-text"></p>
+        <div id="download"></div>
+        <div class="code-block" id="header-block" style="display:none">
+          <div><strong>First sheet header</strong></div>
+          <pre id="header-preview"></pre>
+        </div>
       </div>
     </div>
   </div>
@@ -95,6 +102,12 @@
       uploader.dropdownLabel = 'Select Business Unit';
       uploader.dropdownPlaceholder = 'Choose a country...';
       uploader.dropdownRequired = true;
+      // DEV: Inject selected dropdown value into a fixed-position column
+      uploader.injectDropdownValueIntoColumn = true;
+      uploader.injectColumnHeader = 'Business Unit';
+      uploader.injectColumnIndex = 2; // zero-based position
+      // Preselect a value externally (can be updated later as well)
+      uploader.dropdownValue = 'DE';
       
       // Set dropdown options - European countries
       uploader.dropdownOptions = [
@@ -148,6 +161,9 @@
         // Show result
         const resultDiv = document.getElementById('result');
         const resultText = document.getElementById('result-text');
+        const downloadDiv = document.getElementById('download');
+        const headerBlock = document.getElementById('header-block');
+        const headerPreview = document.getElementById('header-preview');
         resultDiv.style.display = 'block';
         resultText.textContent = `Uploading "${file.name}" for ${countryName} (${dropdownValue})...`;
         
@@ -160,6 +176,38 @@
           resultText.textContent = `✅ Successfully uploaded "${file.name}" for ${countryName} (${dropdownValue})`;
           resultDiv.style.background = '#e8f5e9';
           // Success - component will show success status
+
+          // DEV: Offer download of modified file
+          if (downloadDiv) {
+            // Cleanup any previous content
+            downloadDiv.innerHTML = '';
+            const url = URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.name;
+            link.textContent = 'Download modified Excel';
+            link.style.display = 'inline-block';
+            link.style.marginTop = '10px';
+            link.style.color = '#005DA9';
+            link.style.textDecoration = 'underline';
+            downloadDiv.appendChild(link);
+          }
+
+          // DEV: Preview first sheet header to verify injected column
+          try {
+            if (window.XLSX) {
+              const buffer = await file.arrayBuffer();
+              const wb = window.XLSX.read(buffer, { type: 'array' });
+              const first = wb.SheetNames[0];
+              const sheet = wb.Sheets[first];
+              const aoa = window.XLSX.utils.sheet_to_json(sheet, { header: 1 });
+              const header = (aoa[0] || []).map(String);
+              if (headerPreview) headerPreview.textContent = header.join(' | ');
+              if (headerBlock) headerBlock.style.display = 'block';
+            }
+          } catch (e) {
+            console.warn('Header preview failed:', e);
+          }
         } else {
           resultDiv.style.background = '#ffebee';
           resultText.textContent = `❌ Failed to upload "${file.name}": Network error`;
@@ -169,6 +217,11 @@
       
       // Append to container
       document.getElementById('app').appendChild(uploader);
+
+      // Example: change the selection after 3 seconds to Spain (ES)
+      setTimeout(() => {
+        uploader.dropdownValue = 'ES';
+      }, 3000);
     </script>
 </body>
 </html>

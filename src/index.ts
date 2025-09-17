@@ -33,11 +33,17 @@ const webComponentProps = {
   dropdownPlaceholder: '',
   dropdownLabel: '',
   dropdownRequired: false,
+  // Allow external control of dropdown selection
+  dropdownValue: undefined,
   dropdownRequiredMessage: '',
   dropdownRequiredWarning: '',
   noResultsText: '',
   // Status messages
   uploadingStatusText: '',
+  // Injection props
+  injectDropdownValueIntoColumn: false,
+  injectColumnHeader: '',
+  injectColumnIndex: 0,
 } as const;
 
 // Helper function to map props (excluding styles which is internal)
