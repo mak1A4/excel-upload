@@ -121,6 +121,7 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
   
   let containerRef: HTMLDivElement | undefined;
   let fileInputRef: HTMLInputElement | undefined;
+  let hostElement: (HTMLElement & { dropdownValue?: string | number | undefined }) | undefined;
   
   const colors = getColorHelpers(props);
   const text = getTextHelpers(props);
@@ -147,6 +148,12 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
       setSelectedDropdownValue(exists ? ext : undefined);
     } else {
       setSelectedDropdownValue(ext);
+    }
+  });
+  createEffect(() => {
+    const currentValue = selectedDropdownValue();
+    if (hostElement && hostElement.dropdownValue !== currentValue) {
+      hostElement.dropdownValue = currentValue;
     }
   });
 
@@ -384,6 +391,10 @@ export function ExcelUploadComponent(props: ExcelUploadProps = {}) {
   };
   
   onMount(() => {
+    hostElement = containerRef?.closest('excel-upload') as typeof hostElement;
+    if (hostElement) {
+      hostElement.dropdownValue = selectedDropdownValue();
+    }
     // Apply styles if provided by the web component
     if (props.styles && containerRef) {
       // Create a style element with the tailwind styles
